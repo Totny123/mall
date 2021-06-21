@@ -1,6 +1,6 @@
 <template>
-  <div class="goods-list-item">
-    <img :src="goodsItem.show.img" alt="" />
+  <div class="goods-list-item" @click="itemClick">
+    <img :src="goodsItem.show.img" alt="" @load="imgLoaded" />
     <div class="goods-list-item-info">
       <p>{{ goodsItem.title }}</p>
       <span class="price">{{ goodsItem.price }}</span>
@@ -18,6 +18,15 @@ export default {
       default() {
         return {};
       },
+    },
+  },
+  methods: {
+    imgLoaded() {
+      //发送事件总线给home组件。让home组件知道图片加载完成。从而调用scroll的refresh
+      this.$bus.$emit("imgLoaded");
+    },
+    itemClick() {
+      this.$router.push("/detail/" + this.goodsItem.iid);
     },
   },
 };

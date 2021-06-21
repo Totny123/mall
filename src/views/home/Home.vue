@@ -1,6 +1,13 @@
 <template>
   <div id="home">
     <nav-bar class="home-nav-bar"><div slot="center">购物街</div></nav-bar>
+    <tab-control
+      class="tcontrol"
+      ref="placeHolderTabControl"
+      :titles="['流行', '新款', '精选']"
+      @tabClick="changeCurrentType"
+      v-show="isFixedTabControl"
+    ></tab-control>
     <scroll
       class="wrapper"
       ref="scroll"
@@ -9,11 +16,14 @@
       @pullingUp="loadMore"
       :probe-type="3"
     >
-      <home-swiper :banners="banners"></home-swiper>
+      <home-swiper
+        :banners="banners"
+        @swiperImgLoaded="swiperImgLoaded"
+      ></home-swiper>
       <home-recommend :recommends="recommends"></home-recommend>
       <home-feature></home-feature>
       <tab-control
-        class="tab-control"
+        ref="tabControl"
         :titles="['流行', '新款', '精选']"
         @tabClick="changeCurrentType"
       ></tab-control>
@@ -35,6 +45,7 @@ import Scroll from "components/common/scroll/Scroll";
 import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
+import { debounce } from "common/utils";
 
 export default {
   name: "Home",
@@ -42,13 +53,16 @@ export default {
     return {
       banners: null,
       recommends: null,
+      currentType: "pop",
+      isShowBackTop: false,
+      tabControlOffsetTop: 0,
+      isFixedTabControl: false,
+      saveY: 0,
       goods: {
         pop: { page: 0, list: [] },
         new: { page: 0, list: [] },
         sell: { page: 0, list: [] },
       },
-      currentType: "pop",
-      isShowBackTop: false,
     };
   },
   components: {
@@ -68,6 +82,23 @@ export default {
     this.getHomeGoods("pop");
     this.getHomeGoods("new");
     this.getHomeGoods("sell");
+  },
+  mounted() {
+    //监听图片加载完成。调用refresh更新可滚动距离。
+    const refresh = debounce(this.$refs.scroll.refresh, 10);
+    this.$bus.$on("imgLoaded", () => {
+      refresh();
+    });
+  },
+  destroyed() {},
+  activated() {
+    //活跃时，滚动到离开时的位置，并重新计算可滚动距离。
+    this.$refs.scroll.scrollTo(0, this.saveY, 0);
+    this.$refs.scroll.refresh();
+  },
+  deactivated() {
+    //记录离开的滚动距离
+    this.saveY = this.$refs.scroll.getY();
   },
   methods: {
     getHomeMultidata() {
@@ -89,6 +120,7 @@ export default {
     },
     //修改当前显示商品的类型
     changeCurrentType(index) {
+      //根据子组件传过来的index更改currentType
       switch (index) {
         case 0:
           this.currentType = "pop";
@@ -100,6 +132,9 @@ export default {
           this.currentType = "sell";
           break;
       }
+      //同步两个TabControl的选项。
+      this.$refs.placeHolderTabControl.currentIndex = index;
+      this.$refs.tabControl.currentIndex = index;
     },
     //返回顶部。操作子组件，调用子组件的方法。
     backClick() {
@@ -107,11 +142,19 @@ export default {
     },
     //监听滚动，得到滚动的位置
     wrapperScroll(position) {
+      //修改backtop的显示与否
       this.isShowBackTop = Math.abs(position.y) > 1000;
+      //修改tabcontrol是否fixed
+      this.isFixedTabControl = Math.abs(position.y) > this.tabControlOffsetTop;
     },
     //加载更多数据
     loadMore() {
       this.getHomeGoods(this.currentType);
+    },
+    //监听轮播图加载完成,从而获取准确的offsetTop
+    swiperImgLoaded() {
+      //获取tabControl的offsetTop值
+      this.tabControlOffsetTop = this.$refs.tabControl.$el.offsetTop;
     },
   },
   computed: {
@@ -125,25 +168,14 @@ export default {
 <style scoped>
 #home {
   position: relative;
-  /* padding-top: 44px; */
   height: 100vh;
 }
 
 .home-nav-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 9;
   background-color: var(--color-tint);
   color: #fff;
   font-size: 18px;
 }
-
-/* .tab-control {
-  position: sticky;
-  top: 44px;
-} */
 
 .wrapper {
   position: absolute;
@@ -151,8 +183,11 @@ export default {
   bottom: 49px;
   left: 0;
   right: 0;
-  /* margin-top: 44px;
-  height: calc(100% - 93px); */
   overflow: hidden;
+}
+
+.tcontrol {
+  position: relative;
+  z-index: 9;
 }
 </style>
