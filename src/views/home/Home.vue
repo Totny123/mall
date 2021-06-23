@@ -42,10 +42,9 @@ import NavBar from "components/common/navbar/NavBar";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goodsList/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
-import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
-import { debounce } from "common/utils";
+import { imgLoadedListenerMixin, backTopMixin } from "common/mixin";
 
 export default {
   name: "Home",
@@ -54,7 +53,7 @@ export default {
       banners: null,
       recommends: null,
       currentType: "pop",
-      isShowBackTop: false,
+
       tabControlOffsetTop: 0,
       isFixedTabControl: false,
       saveY: 0,
@@ -65,6 +64,7 @@ export default {
       },
     };
   },
+  mixins: [imgLoadedListenerMixin, backTopMixin],
   components: {
     HomeSwiper,
     HomeRecommend,
@@ -73,7 +73,6 @@ export default {
     TabControl,
     GoodsList,
     Scroll,
-    BackTop,
   },
   created() {
     //请求multidata数据，执行的是methods中的方法。有this的都是执行组件的方法。
@@ -83,22 +82,21 @@ export default {
     this.getHomeGoods("new");
     this.getHomeGoods("sell");
   },
-  mounted() {
-    //监听图片加载完成。调用refresh更新可滚动距离。
-    const refresh = debounce(this.$refs.scroll.refresh, 10);
-    this.$bus.$on("imgLoaded", () => {
-      refresh();
-    });
-  },
+  mounted() {},
   destroyed() {},
   activated() {
     //活跃时，滚动到离开时的位置，并重新计算可滚动距离。
     this.$refs.scroll.scrollTo(0, this.saveY, 0);
     this.$refs.scroll.refresh();
+    //活跃时监听imgload
+    this.$bus.$on("imgLoaded", this.imgLoadedCallback);
   },
   deactivated() {
     //记录离开的滚动距离
     this.saveY = this.$refs.scroll.getY();
+    //离开时取消监听imgload
+    this.$bus.$off("imgLoaded", this.imgLoadedCallback);
+    this.$bus.$off("imgLoaded", this.imgLoadedCallback);
   },
   methods: {
     getHomeMultidata() {
@@ -136,10 +134,7 @@ export default {
       this.$refs.placeHolderTabControl.currentIndex = index;
       this.$refs.tabControl.currentIndex = index;
     },
-    //返回顶部。操作子组件，调用子组件的方法。
-    backClick() {
-      this.$refs.scroll.scrollTo(0, 0, 800);
-    },
+
     //监听滚动，得到滚动的位置
     wrapperScroll(position) {
       //修改backtop的显示与否
@@ -172,7 +167,7 @@ export default {
 }
 
 .home-nav-bar {
-  background-color: var(--color-tint);
+  background-color: var(--color-high-text);
   color: #fff;
   font-size: 18px;
 }

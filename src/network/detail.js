@@ -10,6 +10,12 @@ export function getDetail(iid) {
   })
 }
 
+export function getRecommend() {
+  return request({
+    url: '/recommend'
+  })
+}
+
 export class Goods {
   constructor(itemInfo, columns, services) {
     this.title = itemInfo.title;
@@ -19,6 +25,8 @@ export class Goods {
     this.discountBgColor = itemInfo.discountBgColor;
     this.columns = this.getColumns(columns, services);
     this.services = this.getServices(services);
+    this.desc=itemInfo.desc;
+    this.realPrice=itemInfo.lowNowPrice;
   }
 
   getColumns(columns, services) {
@@ -39,5 +47,12 @@ export class Shop {
     this.cSells = shopInfo.cSells;
     this.cGoods = shopInfo.cGoods;
     this.score = shopInfo.score;
+  }
+}
+
+export class ParamsInfo {
+  constructor(info, rule) {
+    this.info = info.set;
+    this.rule = rule.tables[0];
   }
 }

@@ -58,6 +58,7 @@ export default {
     },
     refresh() {
       //重新计算可滚动距离
+      console.log('刷新一次，计算可滚动距离。');
       this.scroll && this.scroll.refresh();
     },
     //获取滚动的Y值

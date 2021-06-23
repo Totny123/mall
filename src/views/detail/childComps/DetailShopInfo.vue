@@ -37,6 +37,7 @@
         </span>
       </div>
     </div>
+    <div class="bottom-text">进店逛逛</div>
   </div>
 </template>
 
@@ -62,6 +63,9 @@ export default {
 <style scoped>
 .detail-shop-info {
   padding: 0 15px;
+  position: relative;
+  height: 220px;
+  border-bottom: 5px solid #f6f6f6;
 }
 .title {
   margin: 30px 0;
@@ -75,6 +79,7 @@ export default {
 }
 
 .left {
+  position: relative;
   display: flex;
   width: 45%;
   justify-content: space-between;
@@ -118,5 +123,18 @@ export default {
 }
 .score-bad-color {
   color: red;
+}
+.bottom-text {
+  position: absolute;
+  width: 130px;
+  height: 30px;
+  line-height: 30px;
+  bottom: 30px;
+  left: 50%;
+  text-align: center;
+  transform: translate(-50%);
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background: #e3e3e3;
 }
 </style>
